@@ -4,17 +4,17 @@
  * @param options 
  */
 export function effect(fn, options = {}) {
-
-}
-
-export function trackEffects() {
-
-}
-
-export function triggerEffects() {
   
 }
 
-export function isTracking() {
+export function trackEffects(a) {
+
+}
+
+export function triggerEffects(a) {
   
+}
+
+export function isTracking():boolean {
+  return true
 }
