@@ -1,3 +1,5 @@
-export function h() {
-  return {}
+export function h(type, props, children) {
+  return {
+    
+  }
 }

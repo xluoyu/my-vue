@@ -8,5 +8,5 @@ function ensureRenderer() {
 }
 
 export const createApp = (args) => {
-  return ensureRenderer().render(args)
+  return ensureRenderer().createApp(args)
 }

@@ -1,3 +1,7 @@
+import { createAppAPI } from './createApp'
+
+
+
 export function createRenderer() {
   function render(vnode, container) {
 
@@ -7,6 +11,7 @@ export function createRenderer() {
   }
 
   return {
-    render
+    render,
+    createApp: createAppAPI(render)
   }
 }
