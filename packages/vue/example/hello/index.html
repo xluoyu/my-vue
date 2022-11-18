@@ -13,23 +13,8 @@
 
       const rootContainer = document.querySelector("#app");
       const app = createApp(App);
-      console.log(app)
 
       app.mount(rootContainer)
-
-      const enums = {
-        element: 1,
-        component: 1 << 2,
-        textChildren: 1 << 3,
-        arrayChildren: 1 << 4,
-        slotsChildren: 1 << 5
-      }
-
-      let type = enums.element |= enums.component
-
-
-
-      console.log(type, (type).toString(2))
     </script>
   </body>
 </html>

@@ -18,5 +18,5 @@
       "@my-vue/*": ["packages/*/src"]
     }
   },
-  "include": ["packages/*/src", "packages/*/__tests__"]
+  "include": ["packages/**/*", "packages/*/__tests__"]
 }
