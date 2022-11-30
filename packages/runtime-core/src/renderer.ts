@@ -26,6 +26,12 @@ export function createRenderer(options) {
     patch(null, vnode, container)
   }
 
+  /**
+   * 
+   * @param n1 
+   * @param n2 
+   * @param container 
+   */
   function patch(n1, n2, container = null) {
     if (n2.shapeFlag == 2) {
       initComponent(n1, n2, container)
@@ -70,7 +76,6 @@ export function createRenderer(options) {
     if (props) {
       console.log('处理props', props)
     }
-
 
     insert(el, container)
   }

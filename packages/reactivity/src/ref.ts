@@ -1,5 +1,4 @@
 import { trackEffects, triggerEffects, isTracking } from "./effect";
-import { createDep } from './dep'
 
 class RefImpl {
   private _value: any;
@@ -8,7 +7,7 @@ class RefImpl {
 
   constructor(value) {
     this._value = value
-    this.dep = createDep()
+    this.dep = new Set()
   }
 
   get value() {
@@ -37,7 +36,5 @@ function triggerRefValue(ref) {
 
 
 export function ref(value) {
-  return {
-    value
-  }
+  return new RefImpl(value)
 }
