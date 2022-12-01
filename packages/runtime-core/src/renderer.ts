@@ -26,12 +26,6 @@ export function createRenderer(options) {
     patch(null, vnode, container)
   }
 
-  /**
-   * 
-   * @param n1 
-   * @param n2 
-   * @param container 
-   */
   function patch(n1, n2, container = null) {
     if (n2.shapeFlag == 2) {
       initComponent(n1, n2, container)
@@ -71,7 +65,14 @@ export function createRenderer(options) {
     const { props } = vnode
 
     const el = (vnode.el = createElement(vnode.type))
-    setText(el, vnode.children)
+
+    if (typeof vnode.children === 'string') {
+      setText(el, vnode.children)
+    } else if (Array.isArray(vnode.children)) {
+      vnode.children.forEach((child) => {
+        patch(null, child, el)
+      })
+    }
 
     if (props) {
       console.log('处理props', props)
