@@ -26,7 +26,7 @@ export function createRenderer(options) {
     patch(null, vnode, container)
   }
 
-  function patch(n1, n2, container = null) {
+  function patch(n1, n2, container: HTMLElement | null = null) {
     if (n2.shapeFlag == 2) {
       initComponent(n1, n2, container)
     } else {
