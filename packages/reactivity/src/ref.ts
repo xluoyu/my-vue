@@ -1,8 +1,8 @@
-import { trackEffects, triggerEffects, isTracking } from "./effect";
+import { trackEffects, triggerEffects } from "./effect";
 
 class RefImpl {
   private _value: any;
-  public dep;
+  public dep: Set<Function>;
   public __v_isRef = true;
 
   constructor(value) {
@@ -12,7 +12,7 @@ class RefImpl {
 
   get value() {
     // 收集依赖
-    trackRefValue(this);
+    trackEffects(this.dep)
 
     return this._value
   }
@@ -20,15 +20,12 @@ class RefImpl {
   set value(newValue) {
     // 触发依赖
     triggerRefValue(this);
-
   }
 }
 
-function trackRefValue(ref) {
-  if (isTracking()) {
-    trackEffects(ref.dep)
-  }
-}
+
+// function trackRefValue(ref: RefImpl) {
+// }
 
 function triggerRefValue(ref) {
   triggerEffects(ref.dep)
