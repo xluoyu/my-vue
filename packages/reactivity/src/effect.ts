@@ -1,15 +1,21 @@
 
-let activeEffect:Function | null = null
+let activeEffect:ReactiveEffect | null = null
 
+/**
+ * 创建一个effect，
+ * 在effect函数执行时，需要记录所触发的响应式对象
+ */
 class ReactiveEffect<T = any> {
   deps = []; // 改函数包含的依赖
 
-  constructor(public fn: () => T) {
+  constructor(public fn: () => T, public options: any) {
 
   }
 
   run() {
-    
+    activeEffect = this
+
+    this.fn()
   }
 }
 
@@ -19,11 +25,9 @@ class ReactiveEffect<T = any> {
  * @param options 
  */
 export function effect(fn, options = {}) {
-  // const _effect = new ReactiveEffect(fn)
+  const _effect = new ReactiveEffect(fn, options)
 
-  activeEffect = fn
-
-  fn()
+  _effect.run()
 }
 
 export function trackEffects(a: Set<Function>) {

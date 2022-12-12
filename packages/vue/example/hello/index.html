@@ -9,15 +9,21 @@
     <div id="app">
     </div>
     <script type="module">
-      import { ref } from "../../dist/my-vue.esm-bundler.js";
-      // import App from "./App.js";
+      import { ref, computed, watch } from "../../dist/my-vue.esm-bundler.js";
 
-      // const rootContainer = document.querySelector("#app");
-      // const app = createApp(App);
+      const foo = ref(10)
 
-      // app.mount(rootContainer)
+      const bar = computed(() => {
+        return foo.value * 2
+      })
 
-      
+      watch(bar, (val) => {
+        console.log('当前的值为: ' + val)
+      }, {
+        immediate: true
+      })
+
+      window.foo = foo
     </script>
   </body>
 </html>
