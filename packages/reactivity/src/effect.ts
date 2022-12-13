@@ -2,6 +2,7 @@ import { createDep, Dep } from "./dep";
 import { RefImpl } from "./ref";
 
 let activeEffect:ReactiveEffect | null = null
+const effectStack:ReactiveEffect[] = [] // 用来记录effect的执行数组
 
 /**
  * 创建一个effect，
@@ -19,8 +20,11 @@ export class ReactiveEffect<T = any> {
     this.deps.forEach(item => {
       item.delete(this)
     })
-
+    effectStack.push(this)
     this.fn()
+
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
   }
 }
 
@@ -46,6 +50,13 @@ export function trackEffects(dep: Dep) {
 export function triggerEffects(a: Dep) {
   const _effects = new Set(a)
   _effects.forEach(item => {
-    item.run()
+    /**
+     * 当在effect内部修改响应式变量时，需要判断当前所处的effect是否是activeEffect
+     * 
+     * 避免无限循环
+     */
+    if (item !== activeEffect) {
+      item.run()
+    }
   })
 }
