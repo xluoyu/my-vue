@@ -1,13 +1,14 @@
-import { trackEffects, triggerEffects } from "./effect";
+import { createDep } from "./dep";
+import { ReactiveEffect, trackEffects, triggerEffects } from "./effect";
 
-class RefImpl {
+export class RefImpl {
   private _value: any;
-  public dep: Set<Function>;
+  public dep: Set<ReactiveEffect<any>>;
   public __v_isRef = true;
 
   constructor(value) {
     this._value = value
-    this.dep = new Set()
+    this.dep = createDep()
   }
 
   get value() {
@@ -19,13 +20,10 @@ class RefImpl {
 
   set value(newValue) {
     // 触发依赖
+    this._value = newValue
     triggerRefValue(this);
   }
 }
-
-
-// function trackRefValue(ref: RefImpl) {
-// }
 
 function triggerRefValue(ref) {
   triggerEffects(ref.dep)

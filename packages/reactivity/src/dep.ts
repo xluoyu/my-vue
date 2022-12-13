@@ -1,3 +1,8 @@
-export function createDep() {
-  return new Set()
+import { ReactiveEffect } from "./effect"
+
+export type Dep = Set<ReactiveEffect>
+
+export function createDep():Dep {
+  return new Set<ReactiveEffect>()
 }
+
