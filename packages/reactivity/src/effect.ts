@@ -1,8 +1,11 @@
 import { createDep, Dep } from "./dep";
 import { RefImpl } from "./ref";
 
+type EffectScheduler = (...args: any[]) => any
+
 let activeEffect:ReactiveEffect | null = null
 const effectStack:ReactiveEffect[] = [] // 用来记录effect的执行数组
+const targetMap = new WeakMap();
 
 /**
  * 创建一个effect，
@@ -11,7 +14,7 @@ const effectStack:ReactiveEffect[] = [] // 用来记录effect的执行数组
 export class ReactiveEffect<T = any> {
   public deps:Dep[] = []; // 改函数包含的依赖
 
-  constructor(public fn: () => T, public options: any) {
+  constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
     console.log('实例化一个effect')
   }
 
@@ -33,10 +36,26 @@ export class ReactiveEffect<T = any> {
  * @param fn 用户传递的事件
  * @param options 
  */
-export function effect(fn, options = {}) {
-  const _effect = new ReactiveEffect(fn, options)
+type ReactiveEffectRunner = {
+  (): void
+  effect: ReactiveEffect
+}
+type effectOptions = {
+  lazy?: boolean, // 不再立即执行
+  scheduler?: EffectScheduler // 手动控制执行时机
+}
+export function effect(fn, options:effectOptions = {}) {
+  const _effect = new ReactiveEffect(fn, options.scheduler || null)
 
-  _effect.run()
+  if (!options.lazy) {
+    _effect.run()
+  }
+
+  const runner = _effect.run.bind(_effect) as ReactiveEffectRunner
+
+  runner.effect = _effect
+
+  return runner
 }
 
 export function trackEffects(dep: Dep) {
@@ -45,7 +64,6 @@ export function trackEffects(dep: Dep) {
     activeEffect.deps.push(dep)
   }
 }
-
 
 export function triggerEffects(a: Dep) {
   const _effects = new Set(a)
@@ -56,7 +74,11 @@ export function triggerEffects(a: Dep) {
      * 避免无限循环
      */
     if (item !== activeEffect) {
-      item.run()
+      if (item.scheduler) {
+        item.scheduler(item.run.bind(item))
+      } else {
+        item.run()
+      }
     }
   })
 }

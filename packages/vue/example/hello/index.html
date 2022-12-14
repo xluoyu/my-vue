@@ -16,8 +16,9 @@
       const bar = ref(true)
 
       effect(() => {
-        const ss = bar.value ? foo.value : 'no'
-        console.log(ss)
+        console.log(foo.value)
+      }, {
+        lazy: true
       })
 
       // const bar = computed(() => {
@@ -30,10 +31,11 @@
       //   immediate: true
       // })
 
-      // foo.value = 20
+      foo.value = 20
+
+      console.log('end')
 
       window.foo = foo
-      window.bar = bar
     </script>
   </body>
 </html>
