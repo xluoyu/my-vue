@@ -9,16 +9,17 @@
     <div id="app">
     </div>
     <script type="module">
-      import { ref, effect } from "../../dist/my-vue.esm-bundler.js";
+      import { ref, effect, computed } from "../../dist/my-vue.esm-bundler.js";
 
       const foo = ref(10)
 
-      const bar = ref(true)
 
       effect(() => {
-        console.log(foo.value)
-      }, {
-        lazy: true
+        const res = computed(() => {
+          return foo.value * 2
+        })
+
+        console.log(res.value)
       })
 
       // const bar = computed(() => {
@@ -30,10 +31,6 @@
       // }, {
       //   immediate: true
       // })
-
-      foo.value = 20
-
-      console.log('end')
 
       window.foo = foo
     </script>

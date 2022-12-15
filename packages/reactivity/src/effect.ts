@@ -1,5 +1,4 @@
-import { createDep, Dep } from "./dep";
-import { RefImpl } from "./ref";
+import { Dep } from "./dep";
 
 type EffectScheduler = (...args: any[]) => any
 
@@ -15,7 +14,7 @@ export class ReactiveEffect<T = any> {
   public deps:Dep[] = []; // 改函数包含的依赖
 
   constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
-    console.log('实例化一个effect')
+    console.log('实例化一个effect', fn)
   }
 
   run() {
@@ -24,10 +23,13 @@ export class ReactiveEffect<T = any> {
       item.delete(this)
     })
     effectStack.push(this)
-    this.fn()
+    
+    const result = this.fn()
 
     effectStack.pop()
     activeEffect = effectStack[effectStack.length - 1]
+
+    return result
   }
 }
 
@@ -58,6 +60,9 @@ export function effect(fn, options:effectOptions = {}) {
   return runner
 }
 
+/**
+ * 搜集依赖
+ */
 export function trackEffects(dep: Dep) {
   if (activeEffect) {
     dep.add(activeEffect)
@@ -65,6 +70,13 @@ export function trackEffects(dep: Dep) {
   }
 }
 
+/**
+ * 当响应式对象发生变动时，传入其dep
+ * 
+ * 使他的副作用函数全部重新执行
+ * 
+ * @param a 
+ */
 export function triggerEffects(a: Dep) {
   const _effects = new Set(a)
   _effects.forEach(item => {
