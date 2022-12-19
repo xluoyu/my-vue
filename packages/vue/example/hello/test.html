@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+let user = {
+  _name: "Guest",
+  get name() {
+    return this._name;
+  }
+};
+
+let userProxy = new Proxy(user, {
+  get(target, prop, receiver) {
+    return Reflect.get(target, prop, receiver); // (*) target = user
+  }
+});
+
+let admin = {
+  __proto__: userProxy,
+  _name: "Admin"
+};
+
+// Expected: Admin
+// alert(admin.name);
+console.log(admin)
+
+  </script>
+</body>
+</html>

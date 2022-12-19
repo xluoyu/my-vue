@@ -1,10 +1,20 @@
-import { Dep } from "./dep";
+import { create } from "domain";
+import { Dep, createDep } from "./dep";
 
 type EffectScheduler = (...args: any[]) => any
 
 let activeEffect:ReactiveEffect | null = null
-const effectStack:ReactiveEffect[] = [] // 用来记录effect的执行数组
-const targetMap = new WeakMap();
+/**
+ * 用来记录effect的执行数组
+ * 
+ * 主要应对effect的嵌套执行
+ */  
+const effectStack:ReactiveEffect[] = []
+/**
+ * proxy的记录Map
+ */
+type KeyToDepMap = Map<any, Dep>
+const targetMap = new WeakMap<any, KeyToDepMap>();
 
 /**
  * 创建一个effect，
@@ -14,7 +24,6 @@ export class ReactiveEffect<T = any> {
   public deps:Dep[] = []; // 改函数包含的依赖
 
   constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
-    console.log('实例化一个effect', fn)
   }
 
   run() {
@@ -61,13 +70,55 @@ export function effect(fn, options:effectOptions = {}) {
 }
 
 /**
+ * 对object搜集依赖
+ * 
+ * @param target object
+ * @param key 
+ */
+export function track(target, key) {
+  if (!activeEffect) return
+
+  // 如果没有就建个新的
+  let depsMap = targetMap.get(target)
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map<any, Dep>()))
+  }
+
+  // 如果没有就建个新的
+  let dep = depsMap.get(key)
+  if (!dep) {
+    depsMap.set(key, (dep = createDep()))
+  }
+
+  trackEffects(dep)
+}
+
+/**
  * 搜集依赖
+ * 
+ * dep => 当前除非getter的这个值的deps
  */
 export function trackEffects(dep: Dep) {
   if (activeEffect) {
-    dep.add(activeEffect)
-    activeEffect.deps.push(dep)
+    dep.add(activeEffect) // 将effect添加到值的deps中
+    activeEffect.deps.push(dep) // 将值添加到effect的deps中
   }
+}
+
+/**
+ * 对object触发依赖
+ * 
+ * @param target 
+ * @param key 
+ */
+export function trigger(target, key) {
+  const depsMap = targetMap.get(target)
+  // 根本没找到依赖...
+  if (!depsMap) return
+
+  const dep = depsMap.get(key) || []
+
+  triggerEffects(dep)
 }
 
 /**
@@ -77,7 +128,7 @@ export function trackEffects(dep: Dep) {
  * 
  * @param a 
  */
-export function triggerEffects(a: Dep) {
+export function triggerEffects(a: Dep | ReactiveEffect[]) {
   const _effects = new Set(a)
   _effects.forEach(item => {
     /**

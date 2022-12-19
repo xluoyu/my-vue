@@ -9,17 +9,25 @@
     <div id="app">
     </div>
     <script type="module">
-      import { ref, effect, computed } from "../../dist/my-vue.esm-bundler.js";
+      import { ref, effect, computed, reactive } from "../../dist/my-vue.esm-bundler.js";
 
       const foo = ref(10)
 
+      const boo = reactive({
+        name: '小明'
+      })
+
 
       effect(() => {
-        const res = computed(() => {
-          return foo.value * 2
-        })
+        // const res = computed(() => {
+        //   return foo.value * 2
+        // })
 
-        console.log(res.value)
+        console.log(boo.name)
+      })
+
+      effect(() => {
+        console.log('aaa', boo.name)
       })
 
       // const bar = computed(() => {
@@ -32,6 +40,8 @@
       //   immediate: true
       // })
 
+
+      boo.name = '小红'
       window.foo = foo
     </script>
   </body>
