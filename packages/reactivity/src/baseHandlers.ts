@@ -1,4 +1,5 @@
-import { track, trigger } from "./effect";
+import { hasOwn } from "@my-vue/shared";
+import { ITERATE_KEY, TriggerTypes, track, trigger } from "./effect";
 import { Target } from "./reactive"
 
 const get = createGetter()
@@ -17,7 +18,7 @@ function createGetter(isReacOnly?: boolean, isShallow?: boolean): any {
      * 
      */
     const res = Reflect.get(target, key, receiver);
-
+    console.log('get', key)
     track(target, key)
 
     return res
@@ -25,18 +26,79 @@ function createGetter(isReacOnly?: boolean, isShallow?: boolean): any {
 }
 
 export const set = createSetter()
-
+/**
+ * 创建一个set
+ * 
+ * 由于修改、添加key都会触发set
+ * 
+ * 所以要区分一下
+ */
 function createSetter() {
   return function (target, key, val, receiver) {
+    const type:TriggerTypes = hasOwn(target, key) ? TriggerTypes.SET : TriggerTypes.ADD
+    const oldVal = target[key]
     const res = Reflect.set(target, key, val, receiver);
+    // 只有当值真的发生改变时才触发trigger
+    if (oldVal !== val) {
+      console.log('set', key)
 
-    trigger(target, key)
+      // 当前有这个key 就是修改、否则是添加
+      trigger(target, key, type)
+    }
+    
 
     return res
   }
 }
 
+/**
+ * 含有
+ * 
+ * key in obj
+ *  
+ * @param target 
+ * @param key 
+ */
+function has(target, key) {
+  const res = Reflect.has(target, key)
+  console.log('has', key)
+  track(target, key)
+
+  return res
+}
+
+/**
+ * 删除
+ * 
+ * delete obj.key
+ * 
+ * @param target 
+ * @param key 
+ */
+function deleteProperty(target, key) {
+  const hasKey = hasOwn(target, key)
+  const res = Reflect.deleteProperty(target, key)
+  console.log('del', key)
+  hasKey && trigger(target, key, TriggerTypes.DEL)
+
+  return res
+}
+
+/**
+ * for .. in obj 会触发ownKeys
+ * 
+ * 这里定义一个Symbol，并对其做出依赖搜集 
+ * @param target 
+ */
+function ownKeys(target) {
+  track(target, ITERATE_KEY)
+  return Reflect.ownKeys(target)
+}
+
 export const mutableHandlers = {
   get,
-  set
+  set,
+  has,
+  deleteProperty,
+  ownKeys
 }

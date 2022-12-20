@@ -1,5 +1,6 @@
 import { create } from "domain";
 import { Dep, createDep } from "./dep";
+import { Target } from './reactive';
 
 type EffectScheduler = (...args: any[]) => any
 
@@ -24,6 +25,7 @@ export class ReactiveEffect<T = any> {
   public deps:Dep[] = []; // 改函数包含的依赖
 
   constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
+    console.log('初始化一个effect')
   }
 
   run() {
@@ -32,8 +34,10 @@ export class ReactiveEffect<T = any> {
       item.delete(this)
     })
     effectStack.push(this)
-    
+    console.log('即将执行run', this.fn)
+
     const result = this.fn()
+    console.log('执行run结束', result)
 
     effectStack.pop()
     activeEffect = effectStack[effectStack.length - 1]
@@ -57,7 +61,6 @@ type effectOptions = {
 }
 export function effect(fn, options:effectOptions = {}) {
   const _effect = new ReactiveEffect(fn, options.scheduler || null)
-
   if (!options.lazy) {
     _effect.run()
   }
@@ -105,20 +108,59 @@ export function trackEffects(dep: Dep) {
   }
 }
 
+export enum TriggerTypes {
+  ADD = 'ADD',
+  SET = 'SET',
+  DEL = 'DEL',
+}
+
+export const ITERATE_KEY = Symbol()
+
 /**
  * 对object触发依赖
  * 
  * @param target 
  * @param key 
  */
-export function trigger(target, key) {
+export function trigger(
+  target:Target,
+  key: unknown,
+  type: TriggerTypes
+  ) {
   const depsMap = targetMap.get(target)
   // 根本没找到依赖...
   if (!depsMap) return
 
-  const dep = depsMap.get(key) || []
+  const deps:(Dep | undefined)[] = [depsMap.get(key)] // 初始为当前key 的依赖项 Dep
 
-  triggerEffects(dep)
+  switch (type) {
+    case TriggerTypes.ADD:
+    case TriggerTypes.DEL:
+      /**
+       * 当触发for..in 操作时，会在当前的target中添加ITERATE_KEY属性，并作出依赖搜集
+       * 
+       * 所搜集的effect就是 触发for..in 操作的副作用函数
+       * 
+       * 当target的key发生变动时，需要执行ITERATE_KEY中所存储的副作用函数
+       */
+      deps.push(depsMap.get(ITERATE_KEY))
+      break
+    case TriggerTypes.SET:
+      break
+  }
+
+  const effects: ReactiveEffect[] = []
+
+  /**
+   * deps 中可能包含有多个Dep [Dep, Dep, ...]
+   * 
+   * Dep => Set<ReactiveEffect>
+   */
+  deps.forEach(dep => {
+    dep && effects.push(...dep)
+  })
+
+  triggerEffects(effects)
 }
 
 /**

@@ -19,16 +19,11 @@
 
 
       effect(() => {
-        // const res = computed(() => {
-        //   return foo.value * 2
-        // })
-
-        console.log(boo.name)
+        for (const key in boo) {
+          console.log(key, boo[key])
+        }
       })
 
-      effect(() => {
-        console.log('aaa', boo.name)
-      })
 
       // const bar = computed(() => {
       //   return foo.value * 2
@@ -40,9 +35,10 @@
       //   immediate: true
       // })
 
+      boo.name = '小明'
+      // delete boo.name
 
-      boo.name = '小红'
-      window.foo = foo
+      // boo.as = 'zz'
     </script>
   </body>
 </html>
