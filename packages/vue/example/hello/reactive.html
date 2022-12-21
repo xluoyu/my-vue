@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script type="module">
+    import { reactive, effect } from '../../dist/my-vue.esm-bundler.js'
+
+    const obj ={};
+    const proto = {bar:1};
+    const child = reactive(obj);
+    const parent = reactive(proto);
+    //使用parent作为child的原型
+    Object.setPrototypeOf(child, parent)
+
+    effect(()=>{
+      console.log(child.bar) 
+    })
+    //修改child.bar的值
+    child.bar = 2 //会导致副作用函数重断执行两次
+  </script>
+</body>
+</html>

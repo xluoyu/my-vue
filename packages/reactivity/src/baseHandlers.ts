@@ -6,6 +6,9 @@ const get = createGetter()
 
 function createGetter(isReacOnly?: boolean, isShallow?: boolean): any {
   return function get(target: Target, key: string, receiver: object): any {
+    if (key === 'raw') {
+      return target
+    }
     /**
      * Reflect.get(target, key) 等同于target[key]
      * 
@@ -38,17 +41,34 @@ function createSetter() {
     const type:TriggerTypes = hasOwn(target, key) ? TriggerTypes.SET : TriggerTypes.ADD
     const oldVal = target[key]
     const res = Reflect.set(target, key, val, receiver);
+    /**
+     * target === receiver.raw 说明receiver就是target的代理对象
+     */
     // 只有当值真的发生改变时才触发trigger
-    if (oldVal !== val) {
-      console.log('set', key)
+    if (target === receiver.raw && hasChanged(val, oldVal)) {
+      console.log('set', key, target, receiver)
 
       // 当前有这个key 就是修改、否则是添加
       trigger(target, key, type)
     }
     
-
     return res
   }
+}
+
+/**
+ * 返回两个值是否不同
+ * @param val 
+ * @param oldVal 
+ */
+function hasChanged(val, oldVal) {
+  /**
+   * Object.is
+   * 严格判断两个值是否相等
+   * 
+   * https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/is#%E6%8F%8F%E8%BF%B0
+   */
+  return !Object.is(val, oldVal)
 }
 
 /**
