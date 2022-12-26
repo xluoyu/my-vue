@@ -1,4 +1,3 @@
-import { create } from "domain";
 import { Dep, createDep } from "./dep";
 import { Target } from './reactive';
 

@@ -1,13 +1,19 @@
 import { hasOwn } from "@my-vue/shared";
 import { ITERATE_KEY, TriggerTypes, track, trigger } from "./effect";
-import { Target } from "./reactive"
+import { reactive, ReactiveFlags, readonly, Target } from "./reactive"
 
 const get = createGetter()
 
-function createGetter(isReacOnly?: boolean, isShallow?: boolean): any {
+function createGetter(isReadOnly?: boolean, isShallow?: boolean): any {
   return function get(target: Target, key: string, receiver: object): any {
     if (key === 'raw') {
       return target
+    } else if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadOnly
+    } else if (key === ReactiveFlags.IS_READONLY) {
+      return isReadOnly
+    } else if (key === ReactiveFlags.IS_SHALLOW) {
+      return isShallow
     }
     /**
      * Reflect.get(target, key) 等同于target[key]
@@ -22,7 +28,32 @@ function createGetter(isReacOnly?: boolean, isShallow?: boolean): any {
      */
     const res = Reflect.get(target, key, receiver);
     console.log('get', key)
-    track(target, key)
+
+    /**
+     * 如果是只读，不需要搜集依赖
+     * 
+     * 因为他不会被修改
+     */
+    if (!isReadOnly) {
+      track(target, key)
+    }
+
+    /**
+     * 浅层的就不需要在进行后面的判断了
+     */
+    if (isShallow) {
+      return res
+    }
+
+    /**
+     * 当target是个深层对象时
+     * 
+     * 如果res是个对象，则再套一层reative，保证他的响应式
+     * 此时的响应式effect直接与内部链接
+     */
+    if (typeof res === 'object' && res !== null) {
+      return isReadOnly ? readonly(res) : reactive(res)
+    }
 
     return res
   }
@@ -36,7 +67,7 @@ export const set = createSetter()
  * 
  * 所以要区分一下
  */
-function createSetter() {
+function createSetter(shallow = false) {
   return function (target, key, val, receiver) {
     const type:TriggerTypes = hasOwn(target, key) ? TriggerTypes.SET : TriggerTypes.ADD
     const oldVal = target[key]
@@ -121,4 +152,28 @@ export const mutableHandlers = {
   has,
   deleteProperty,
   ownKeys
+}
+
+const shallowGet = createGetter(false, true)
+// const shallowSet = createSetter(false, true)
+
+export const shallowReactiveHandlers = Object.assign({}, mutableHandlers, {
+  get: shallowGet,
+  // set: shallowSet
+})
+
+const readonlyGet = createGetter(true)
+
+export const readonlyHandlers = {
+  get: readonlyGet,
+  set: (target, key) => {
+    console.warn(`Set ${String(key)} failed: target is readonly`, target)
+
+    return true
+  },
+  deleteProperty: (target, key) => {
+    console.warn(`Delete ${String(key)} failed: target is readonly`, target)
+
+    return true
+  }
 }

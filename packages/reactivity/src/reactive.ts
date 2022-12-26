@@ -1,4 +1,4 @@
-import { mutableHandlers } from "./baseHandlers";
+import { mutableHandlers, readonlyHandlers, shallowReactiveHandlers } from "./baseHandlers";
 
 export const enum ReactiveFlags {
   IS_REACTIVE = '__v_isReactive',
@@ -25,6 +25,24 @@ const reactiveMap = new WeakMap<Target, any>()
 export function reactive<T extends object>(target: T):T
 export function reactive(target: object) {
   return createReactiveObject(target, mutableHandlers, reactiveMap)
+}
+
+const shallowMap = new WeakMap<Target, any>()
+
+type ShallowReactive<T> = T & { ShallowReactiveMarker: true }
+
+/**
+ * 仅做浅层的响应式处理
+ * @param target 
+ */
+export function shallowReactive<T extends object>(target: T): ShallowReactive<T> {
+  return createReactiveObject(target, shallowReactiveHandlers, shallowMap)
+}
+
+const readonlyMap = new WeakMap<Target, any>()
+
+export function readonly(target: object) {
+  return createReactiveObject(target, readonlyHandlers, readonlyMap)
 }
 
 function createReactiveObject(
