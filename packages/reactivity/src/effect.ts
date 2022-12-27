@@ -1,3 +1,4 @@
+import { isArray } from "@my-vue/shared";
 import { Dep, createDep } from "./dep";
 import { Target } from './reactive';
 
@@ -124,13 +125,30 @@ export const ITERATE_KEY = Symbol()
 export function trigger(
   target:Target,
   key: unknown,
-  type: TriggerTypes
+  type: TriggerTypes, // 修改类型
+  newVal: unknown // 新的值
   ) {
   const depsMap = targetMap.get(target)
   // 根本没找到依赖...
   if (!depsMap) return
 
   const deps:(Dep | undefined)[] = [depsMap.get(key)] // 初始为当前key 的依赖项 Dep
+
+  /**
+   * 当用户直接操作length时，需要执行target上所有的副作用
+   * 
+   * arr.length = 0
+   */
+  if (key === 'length' && isArray(target)) {
+    depsMap.forEach((effects, key) => {
+      /**
+       * 所有key(index) 大于新的index的值，都要执行副作用
+       */
+      if (key >= (newVal as Number)) {
+        deps.push(effects)
+      }
+    })
+  }
 
   switch (type) {
     case TriggerTypes.ADD:
@@ -141,8 +159,16 @@ export function trigger(
        * 所搜集的effect就是 触发for..in 操作的副作用函数
        * 
        * 当target的key发生变动时，需要执行ITERATE_KEY中所存储的副作用函数
+       * 
+       * 
+       * 如果target是数组的话，ADD或DEL会改变length，所以要执行一下length的依赖
        */
-      deps.push(depsMap.get(ITERATE_KEY))
+      if (Array.isArray(target)) {
+        deps.push(depsMap.get('length'))
+      } else {
+        deps.push(depsMap.get(ITERATE_KEY))
+      }
+
       break
     case TriggerTypes.SET:
       break
@@ -158,7 +184,6 @@ export function trigger(
   deps.forEach(dep => {
     dep && effects.push(...dep)
   })
-
   triggerEffects(effects)
 }
 

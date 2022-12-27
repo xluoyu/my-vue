@@ -3,13 +3,15 @@ import { mutableHandlers, readonlyHandlers, shallowReactiveHandlers } from "./ba
 export const enum ReactiveFlags {
   IS_REACTIVE = '__v_isReactive',
   IS_READONLY = '__v_isReadonly',
-  IS_SHALLOW = '__v_isShallow'
+  IS_SHALLOW = '__v_isShallow',
+  RAW = '__v_raw' // 用来记录原始对象，getter中有key的判断
 }
 
 export interface Target {
   [ReactiveFlags.IS_REACTIVE]?: boolean;
   [ReactiveFlags.IS_READONLY]?: boolean;
   [ReactiveFlags.IS_SHALLOW]?: boolean;
+  [ReactiveFlags.RAW]?: any
 }
 
 /**
@@ -50,8 +52,31 @@ function createReactiveObject(
   baseHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>
   ) {
+  
+  let _proxy = proxyMap.get(target) 
 
-  const _proxy = new Proxy(target, baseHandlers)
+  if (_proxy) return _proxy
+
+  _proxy = new Proxy(target, baseHandlers)
+  
+  proxyMap.set(target, _proxy)
 
   return _proxy
+}
+
+/**
+ * 返回原始对象
+ * 
+ * 在reactive创建的响应式对象中，Getter内判断
+ * 
+ * if (key === ReactiveFlags.RAW) {
+ *    return target // 这个就是原始值
+ * }
+ * 
+ * @param target 
+ */
+export function toRaw(target) {
+  const raw = target && target[ReactiveFlags.RAW]
+
+  return raw ? toRaw(raw) : target
 }
