@@ -4,6 +4,8 @@ import { Target } from './reactive';
 
 type EffectScheduler = (...args: any[]) => any
 
+let shouldTrack = true // 当前是否允许注入依赖
+
 let activeEffect:ReactiveEffect | null = null
 /**
  * 用来记录effect的执行数组
@@ -79,7 +81,7 @@ export function effect(fn, options:effectOptions = {}) {
  * @param key 
  */
 export function track(target, key) {
-  if (!activeEffect) return
+  if (!activeEffect || !shouldTrack) return
 
   // 如果没有就建个新的
   let depsMap = targetMap.get(target)
@@ -210,4 +212,18 @@ export function triggerEffects(a: Dep | ReactiveEffect[]) {
       }
     }
   })
+}
+
+/**
+ * 暂停搜集依赖
+ */
+export function pauseTracking() {
+  shouldTrack = false
+}
+
+/**
+ * 继续搜集依赖
+ */
+export function enableTracking() {
+  shouldTrack = true
 }

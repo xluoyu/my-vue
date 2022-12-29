@@ -1,5 +1,5 @@
 import { hasOwn, isArray } from "@my-vue/shared";
-import { ITERATE_KEY, TriggerTypes, track, trigger } from "./effect";
+import { ITERATE_KEY, TriggerTypes, pauseTracking, track, trigger, enableTracking } from './effect';
 import { reactive, ReactiveFlags, readonly, Target, toRaw } from "./reactive"
 
 /**
@@ -14,7 +14,6 @@ import { reactive, ReactiveFlags, readonly, Target, toRaw } from "./reactive"
  * 
  * 由于obj是一个原始对象，arr中的obj是一个已经经过处理后的响应式对象
  * 所以includes找不到
- * 
  * 
  */
 const arrayInstrumentations = createArrayInstrumentations()
@@ -31,6 +30,26 @@ function createArrayInstrumentations() {
       if (res === -1 || res === false) {
         return arr[key](...args.map(toRaw))
       }
+
+      return res
+    }
+  })
+
+  /**
+   * 这些api会操作数组的length，在进行修改时会get length
+   * 
+   * 这会对依赖的搜集造成影响。按照需求来说，这些api只会进行修改操作，不应该进行依赖搜集
+   * 
+   * 通过设置shouldTrack，在 track 阶段，终止搜集操作
+   */
+  ;['push', 'pop', 'shift', 'unshift', 'splice'].forEach(key => {
+    instrumentations[key] = function(...args: unknown[]) {
+      const arr = toRaw(this)
+      pauseTracking()
+
+      const res = arr[key].apply(this, ...args)
+
+      enableTracking()
 
       return res
     }
@@ -117,10 +136,10 @@ function createSetter(shallow = false) {
     const oldVal = target[key]
     const res = Reflect.set(target, key, val, receiver);
     /**
-     * target === receiver.raw 说明receiver就是target的代理对象
+     * target === receiver[ReactiveFlags.RAW] 说明receiver就是target的代理对象
      */
     // 只有当值真的发生改变时才触发trigger
-    if (target === receiver.raw && hasChanged(val, oldVal)) {
+    if (target === receiver[ReactiveFlags.RAW] && hasChanged(val, oldVal)) {
       console.log('set', key, target, receiver, type, val)
 
       // 当前有这个key 就是修改、否则是添加

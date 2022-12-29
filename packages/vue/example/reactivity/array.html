@@ -10,10 +10,13 @@
   <script type="module">
     import { effect, reactive } from "../../dist/my-vue.esm-bundler.js";
 
-    const obj = {name: 1}
-    const arr = reactive([obj])
+    const arr = reactive([1])
     
-   console.log(arr.includes(obj))
+  //  console.log(arr.includes(obj))
+effect(() => {
+  arr.push('2')
+})
+
 
   </script>
 </body>
