@@ -87,7 +87,7 @@ function createGetter(isReadOnly?: boolean, isShallow?: boolean): any {
      * 
      */
     const res = Reflect.get(target, key, receiver);
-    console.log('get', key)
+    console.log('get', key, receiver)
 
     /**
      * 如果是只读，不需要搜集依赖

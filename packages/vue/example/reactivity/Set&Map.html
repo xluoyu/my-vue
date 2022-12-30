@@ -8,11 +8,27 @@
 </head>
 <body>
   <script type="module">
-    import { effect, reactive } from "../../dist/my-vue.esm-bundler.js";
+    // import { effect, reactive } from "../../dist/my-vue.esm-bundler.js";
+
+    function reactive(obj) {
+      return new Proxy(obj, {
+        get(target, key, receiver) {
+          if (key === 'size') {
+            console.log(target)
+
+            return Reflect.get(target, key, target)
+          }
+
+          return target[key].bind(target)
+        }
+      })
+    }
 
     const arr = reactive(new Set())
 
     arr.add(12)
+
+    console.log(arr)
   </script>
 </body>
 </html>
