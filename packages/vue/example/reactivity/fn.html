@@ -8,19 +8,19 @@
 </head>
 <body>
   <script type="module">
-    import { ref, effect, computed, reactive, shallowReactive, readonly } from "../../dist/my-vue.esm-bundler.js";
+    import { ref, effect, toRef, reactive, shallowReactive, proxyRefs } from "../../dist/my-vue.esm-bundler.js";
 
-    const obj = readonly({
-      boo: {
-        foo: 1
-      }
+    const obj = reactive({
+      boo: 123
     })
+
+    const vboo = proxyRefs(obj)
 
     effect(() => {
-      console.log(obj.boo.foo)
+      console.log('当前的之', vboo.boo)
     })
 
-    obj.boo.foo += 3
+    vboo.boo = 456
 
   </script>
 </body>
