@@ -15,7 +15,11 @@ export class ComputedRefImpl {
       if (this._dirty) return
       // 开锁
       this._dirty = true
-      // 触发存储当副作用函数集
+      /**
+       * 这里不需要手动去执行run，其实这个函数中有run函数作为入参
+       * 
+       * 我们直接通知所有存储在dep中的副作用函数，让他们重新执行并过去computed的值即可
+       */
       triggerEffects(this.dep)
     })
   }

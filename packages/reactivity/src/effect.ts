@@ -24,7 +24,7 @@ const targetMap = new WeakMap<any, KeyToDepMap>();
  * 在effect函数执行时，需要记录所触发的响应式对象
  */
 export class ReactiveEffect<T = any> {
-  public deps:Dep[] = []; // 改函数包含的依赖
+  public deps:Dep[] = []; // 该函数包含的依赖
 
   constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
     console.log('初始化一个effect')
@@ -32,9 +32,9 @@ export class ReactiveEffect<T = any> {
 
   run() {
     activeEffect = this
-    this.deps.forEach(item => {
-      item.delete(this)
-    })
+    
+    cleanupEffect(this)
+
     effectStack.push(this)
     console.log('即将执行run', this.fn)
 
@@ -45,6 +45,16 @@ export class ReactiveEffect<T = any> {
     activeEffect = effectStack[effectStack.length - 1]
 
     return result
+  }
+}
+
+function cleanupEffect(effect: ReactiveEffect) {
+  const { deps } = effect
+  if (deps.length) {
+    deps.forEach(item => {
+      item.delete(effect)
+    })
+    deps.length = 0
   }
 }
 
@@ -129,7 +139,7 @@ export function trigger(
   key: unknown,
   type: TriggerTypes, // 修改类型
   newVal: unknown // 新的值
-  ) {
+) {
   const depsMap = targetMap.get(target)
   // 根本没找到依赖...
   if (!depsMap) return
