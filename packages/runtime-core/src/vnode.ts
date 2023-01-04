@@ -1,13 +1,20 @@
+import { ComponentInternalInstance } from "./component"
 
 export type VNodeType = string | VNode
 
 export type VNodeNormalizedChildren = string | Array<any> | undefined
 
+export enum ShapeFlag {
+  Tag = 'tag',
+  Component = 'component',
+}
+
 export interface VNode {
   type: VNodeType,
   props,
   children: VNodeNormalizedChildren,
-  shapeFlag: number
+  component?: ComponentInternalInstance | null
+  shapeFlag: ShapeFlag
 }
 
 /**
@@ -29,10 +36,10 @@ export function createVNode(
   return vnode
 }
 
-function getShapeFlag(type):number {
+function getShapeFlag(type):ShapeFlag {
   if (typeof type === 'string') {
-    return 1
+    return ShapeFlag.Tag
   }
 
-  return 2
+  return ShapeFlag.Component
 }
