@@ -1,4 +1,4 @@
-export { ref } from './ref'
+export { ref, toRef, toRefs, proxyRefs } from './ref'
 export { effect } from "./effect";
 export { computed } from "./computed";
 export { reactive,
