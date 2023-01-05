@@ -26,6 +26,7 @@ export function createVNode(
   props?: any,
   children?: string | Array<any>
 ) {
+  console.log('vnode', type)
   const vnode:VNode = {
     type,
     props,
