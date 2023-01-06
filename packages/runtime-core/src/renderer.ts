@@ -34,6 +34,7 @@ export interface RendererOptions<BaseNode = Node, BaseElement = Element> {
  */
 export function createRenderer(options: RendererOptions) {
   const {
+    patchProp,
     createElement,
     setElementText,
     insert
@@ -94,6 +95,7 @@ export function createRenderer(options: RendererOptions) {
   }
   
   function mountElement(vnode, container) {
+    console.log(vnode)
     const { props } = vnode
 
     const el = (vnode.el = createElement(vnode.type))
@@ -106,9 +108,14 @@ export function createRenderer(options: RendererOptions) {
       })
     }
 
+    /**
+     * 处理props
+     */
     if (props) {
       console.log('处理props', props)
-
+      for (const key in props) {
+        patchProp(el, key, null, props[key])
+      }
     }
 
     insert(el, container)
