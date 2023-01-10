@@ -1,3 +1,4 @@
+import { normalizeContainer } from "@my-vue/shared";
 import { createVNode } from "./vnode";
 
 /**
@@ -11,10 +12,11 @@ export function createAppAPI (render) {
       use(pulgin) {
 
       },
-      mount(rootContainer) {
+      mount(rootContainer: Element | string) {
+        const container = normalizeContainer(rootContainer)
         const vnode = createVNode(rootComponent)
 
-        render(vnode, rootContainer)
+        render(vnode, container)
       }
     }
 

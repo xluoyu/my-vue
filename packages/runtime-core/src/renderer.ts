@@ -50,11 +50,30 @@ export function createRenderer(options: RendererOptions) {
       patch(container._vnode, vnode, container)
     } else {
       if (container._vnode) {
-        container.innerHTML = ''
+        /**
+         * 卸载时不能直接清空
+         * 需要触发组件、指令等unmounted生命周期
+         * 还要移除dom的绑定事件
+         */
+        // container.innerHTML = ''
+        unmount(container._vnode)
+        
       }
     }
 
     container._vnode = vnode
+  }
+
+  /**
+   * 卸载处理
+   * @param vnode 
+   */
+  function unmount(vnode: VNode) {
+    const el = vnode.el as Element
+
+    const parent = el.parentNode
+
+    if (parent) parent.removeChild(el)
   }
 
   /**
@@ -83,14 +102,21 @@ export function createRenderer(options: RendererOptions) {
   function setupRender(instance, initialVNode, container) {
     if (instance.type.render) {
       const subTree = instance.type.render()
-
+      console.log('setupRender', subTree)
       patch(null, subTree, container)
     }
   }
 
-  function initElement(n1, n2, container) {
+  function initElement(n1:VNode | null, n2: VNode, container) {
+    if (n1 && n1.type !== n2.type) {
+      unmount(n1)
+      n1 = null
+    }
+    
     if (!n1) {
       mountElement(n2, container)
+    } else {
+      
     }
   }
   

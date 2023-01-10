@@ -10,7 +10,7 @@ const rendererOptions = Object.assign({ patchProp }, nodeOps)
 /**
  * 无需再次创建渲染器
  */
-function ensureRenderer() {
+export function ensureRenderer() {
   return renderer || (renderer = createRenderer(rendererOptions))
 }
 

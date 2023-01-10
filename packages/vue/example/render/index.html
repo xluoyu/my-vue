@@ -10,20 +10,32 @@
   <div id="app"></div>
 
   <script type="module">
-    import { h, createApp } from "../../dist/my-vue.esm-bundler.js";
+    import { h, createApp, ensureRenderer } from "../../dist/my-vue.esm-bundler.js";
 
     const app = createApp({
       render () {
         return h('div', {
-          class: 'box',
-          disabled: true
-        }, '你好')
+          class: {box: true, test:false},
+          style: 'width: 20px;height:20px;background:blue',
+          onClick: () => {
+            console.log('点击率')
+          }
+        })
       }
     })
 
-    // const app = createApp('div', {}, '哈哈哈')
-    app.mount(document.querySelector('#app'))
+    // const n1 = {
+    //   type: 'p',
+    //   children: '哈哈哈'
+    // }
 
+    // const n2 = {
+    //   type: 'input',
+    // }
+
+    // ensureRenderer().render(n1, document.querySelector('#app'))
+    // ensureRenderer().render(n2, document.querySelector('#app'))
+    app.mount(document.querySelector('#app'))
   </script>
 </body>
 </html>
